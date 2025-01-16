@@ -1,4 +1,4 @@
 # Website
 Go to page:
 
-https://angelklear.github.io/home
+https://angelklear.github.io/
