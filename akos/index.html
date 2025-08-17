@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>akOS - Web Edition</title>
+    <style>
+        /* Глобальные стили */
+        :root {
+            --primary: #5e35b1;
+            --secondary: #7e57c2;
+            --accent: #00bcd4;
+            --background: #121212;
+            --surface: #1e1e1e;
+            --text: #e0e0e0;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --error: #f44336;
+            --transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: var(--background);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Основа ОС */
+        .os-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Статус бар */
+        .status-bar {
+            height: 24px;
+            background: rgba(30, 30, 30, 0.85);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            padding: 0 16px;
+            align-items: center;
+            font-size: 14px;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 100;
+        }
+
+        /* Домашний экран */
+        .home-screen {
+            height: 100%;
+            padding: 40px 16px 100px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            align-content: start;
+        }
+
+        /* Иконки приложений */
+        .app-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            border-radius: 16px;
+            padding: 12px;
+        }
+
+        .app-icon:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-5px);
+        }
+
+        .app-icon::before {
+            content: "";
+            width: 60px;
+            height: 60px;
+            background: var(--primary);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 20px rgba(94, 53, 177, 0.4);
+        }
+
+        .app-icon.phone::before { content: "📞"; background: var(--success); }
+        .app-icon.messages::before { content: "✉️"; background: var(--accent); }
+        .app-icon.camera::before { content: "📷"; background: var(--warning); }
+        .app-icon.gallery::before { content: "🖼️"; background: #e91e63; }
+        .app-icon.music::before { content: "🎵"; background: #9c27b0; }
+        .app-icon.maps::before { content: "🗺️"; background: #3f51b5; }
+        .app-icon.weather::before { content: "☀️"; background: #ff9800; }
+        .app-icon.settings::before { content: "⚙️"; background: #607d8b; }
+
+        .app-name {
+            font-size: 12px;
+            text-align: center;
+            max-width: 70px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Док-панель */
+        .dock {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            padding: 12px 24px;
+            background: rgba(30, 30, 30, 0.7);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 90;
+        }
+
+        .dock .app-icon::before {
+            width: 50px;
+            height: 50px;
+        }
+
+        /* Центр управления */
+        .control-center {
+            position: fixed;
+            top: 24px;
+            right: -300px;
+            width: 300px;
+            background: rgba(30, 30, 30, 0.85);
+            backdrop-filter: blur(30px);
+            border-radius: 24px;
+            padding: 24px;
+            z-index: 99;
+            transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .control-center.active {
+            right: 16px;
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .control-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .control-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .control-item::before {
+            content: "";
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .control-item.wifi::before { content: "📶"; background: var(--accent); }
+        .control-item.bluetooth::before { content: "🔗"; background: #2196f3; }
+        .control-item.airplane::before { content: "✈️"; background: #9e9e9e; }
+        .control-item.flashlight::before { content: "🔦"; background: #ffc107; }
+        .control-item.settings::before { content: "⚙️"; background: #607d8b; }
+
+        /* Экран блокировки */
+        .lock-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a237e, #311b92);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 50px 0 80px;
+            align-items: center;
+            z-index: 1000;
+            transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        .time-display {
+            font-size: 64px;
+            font-weight: 300;
+            margin-top: 40px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .date-display {
+            font-size: 20px;
+            opacity: 0.8;
+        }
+
+        .unlock-bar {
+            width: 80%;
+            max-width: 400px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .unlock-bar::after {
+            content: "Проведите для разблокировки";
+            position: absolute;
+            transition: var(--transition);
+        }
+
+        .unlock-bar:hover::after {
+            opacity: 0.5;
+        }
+
+        .unlock-handle {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            position: absolute;
+            left: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            transition: var(--transition);
+        }
+
+        /* Анимация неона */
+        .neon-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            background: radial-gradient(circle at center, 
+                rgba(126, 87, 194, 0.1) 0%, 
+                transparent 70%);
+            animation: neon-pulse 8s infinite alternate;
+        }
+
+        @keyframes neon-pulse {
+            0% { opacity: 0.3; }
+            100% { opacity: 0.7; }
+        }
+
+        /* Контейнер для приложений */
+        .app-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 200;
+            display: none;
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+
+        .app-container.active {
+            display: block;
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .app-header {
+            height: 50px;
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(20px);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .app-back-button {
+            background: none;
+            border: none;
+            color: var(--accent);
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .app-content {
+            height: calc(100% - 50px);
+            overflow-y: auto;
+            padding: 16px;
+            background: var(--surface);
+        }
+
+        /* Стили для конкретных приложений */
+        .camera-preview {
+            width: 100%;
+            height: 70vh;
+            background: #000;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .camera-preview::before {
+            content: "📷 Камера";
+            position: absolute;
+            top: 20px;
+            color: white;
+            font-size: 24px;
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .camera-controls {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            gap: 30px;
+        }
+
+        .camera-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 2px solid white;
+            background: rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .camera-shutter {
+            width: 70px;
+            height: 70px;
+            background: white;
+            border: 4px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .phone-dialer {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .dial-button {
+            height: 70px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .dial-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .dial-button span {
+            font-size: 12px;
+            margin-top: 5px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .phone-number-display {
+            width: 100%;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+        }
+
+        /* Анимация открытия приложения */
+        @keyframes appOpen {
+            0% { 
+                opacity: 0; 
+                transform: translateY(100px) scale(0.9);
+            }
+            100% { 
+                opacity: 1; 
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Галерея */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .gallery-item {
+            aspect-ratio: 1;
+            background: linear-gradient(45deg, #5e35b1, #00bcd4);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* Погода */
+        .weather-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .current-weather {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .weather-icon {
+            font-size: 64px;
+        }
+
+        .weather-temp {
+            font-size: 48px;
+            font-weight: 300;
+        }
+
+        .forecast {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+
+        .forecast-item {
+            min-width: 80px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="neon-effect"></div>
+    
+    <div class="os-container">
+        <!-- Экран блокировки -->
+        <div class="lock-screen" id="lockScreen">
+            <div>
+                <div class="time-display" id="timeDisplay">10:24</div>
+                <div class="date-display" id="dateDisplay">Среда, 17 августа</div>
+            </div>
+            <div class="unlock-bar">
+                <div class="unlock-handle" id="unlockHandle"></div>
+            </div>
+        </div>
+
+        <!-- Статус бар -->
+        <div class="status-bar">
+            <div id="osTime">10:24</div>
+            <div>akOS</div>
+            <div>📶 100% 🔋</div>
+        </div>
+
+        <!-- Домашний экран -->
+        <div class="home-screen">
+            <div class="app-icon phone" data-app="phone">
+                <span class="app-name">Телефон</span>
+            </div>
+            <div class="app-icon messages" data-app="messages">
+                <span class="app-name">Сообщения</span>
+            </div>
+            <div class="app-icon camera" data-app="camera">
+                <span class="app-name">Камера</span>
+            </div>
+            <div class="app-icon gallery" data-app="gallery">
+                <span class="app-name">Галерея</span>
+            </div>
+            <div class="app-icon music" data-app="music">
+                <span class="app-name">Музыка</span>
+            </div>
+            <div class="app-icon maps" data-app="maps">
+                <span class="app-name">Карты</span>
+            </div>
+            <div class="app-icon weather" data-app="weather">
+                <span class="app-name">Погода</span>
+            </div>
+            <div class="app-icon settings" data-app="settings">
+                <span class="app-name">Настройки</span>
+            </div>
+        </div>
+
+        <!-- Док-панель -->
+        <div class="dock">
+            <div class="app-icon phone" data-app="phone"></div>
+            <div class="app-icon messages" data-app="messages"></div>
+            <div class="app-icon camera" data-app="camera"></div>
+            <div class="app-icon settings" data-app="settings"></div>
+        </div>
+
+        <!-- Центр управления -->
+        <div class="control-center" id="controlCenter">
+            <h3>Центр управления</h3>
+            <div class="control-grid">
+                <div class="control-item wifi"></div>
+                <div class="control-item bluetooth"></div>
+                <div class="control-item airplane"></div>
+                <div class="control-item flashlight"></div>
+                <div class="control-item settings"></div>
+            </div>
+        </div>
+        
+        <!-- Контейнеры приложений -->
+        <div class="app-container" id="camera-app">
+            <div class="app-header">
+                <button class="app-back-button" data-back="home">← Назад</button>
+            </div>
+            <div class="app-content">
+                <div class="camera-preview">
+                    <div class="camera-controls">
+                        <div class="camera-button">↻</div>
+                        <div class="camera-button camera-shutter"></div>
+                        <div class="camera-button">📸</div>
+                    </div>
+                </div>
+                <h3>Последние фото</h3>
+                <div class="gallery-grid">
+                    <div class="gallery-item"></div>
+                    <div class="gallery-item"></div>
+                    <div class="gallery-item"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="app-container" id="phone-app">
+            <div class="app-header">
+                <button class="app-back-button" data-back="home">← Назад</button>
+            </div>
+            <div class="app-content">
+                <div class="phone-number-display">+7 (999) 123-45-67</div>
+                <div class="phone-dialer">
+                    <div class="dial-button">1 <span></span></div>
+                    <div class="dial-button">2 <span>ABC</span></div>
+                    <div class="dial-button">3 <span>DEF</span></div>
+                    <div class="dial-button">4 <span>GHI</span></div>
+                    <div class="dial-button">5 <span>JKL</span></div>
+                    <div class="dial-button">6 <span>MNO</span></div>
+                    <div class="dial-button">7 <span>PQRS</span></div>
+                    <div class="dial-button">8 <span>TUV</span></div>
+                    <div class="dial-button">9 <span>WXYZ</span></div>
+                    <div class="dial-button">*</div>
+                    <div class="dial-button">0 <span>+</span></div>
+                    <div class="dial-button">#</div>
+                </div>
+                <div style="display: flex; justify-content: center; margin-top: 20px; gap: 20px;">
+                    <div class="dial-button" style="background: var(--success);">📞</div>
+                    <div class="dial-button" style="background: var(--error);">✖</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="app-container" id="weather-app">
+            <div class="app-header">
+                <button class="app-back-button" data-back="home">← Назад</button>
+            </div>
+            <div class="app-content">
+                <div class="weather-card">
+                    <div class="current-weather">
+                        <div class="weather-icon">☀️</div>
+                        <div class="weather-temp">24°</div>
+                    </div>
+                    <div>Москва, Россия</div>
+                    <div>Солнечно, без осадков</div>
+                </div>
+                
+                <h3>Прогноз на 5 дней</h3>
+                <div class="forecast">
+                    <div class="forecast-item">
+                        <div>СР</div>
+                        <div>☀️</div>
+                        <div>24°</div>
+                    </div>
+                    <div class="forecast-item">
+                        <div>ЧТ</div>
+                        <div>⛅</div>
+                        <div>22°</div>
+                    </div>
+                    <div class="forecast-item">
+                        <div>ПТ</div>
+                        <div>🌧️</div>
+                        <div>18°</div>
+                    </div>
+                    <div class="forecast-item">
+                        <div>СБ</div>
+                        <div>🌧️</div>
+                        <div>17°</div>
+                    </div>
+                    <div class="forecast-item">
+                        <div>ВС</div>
+                        <div>⛅</div>
+                        <div>20°</div>
+                    </div>
+                </div>
+                
+                <div class="weather-card">
+                    <h3>Детали</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                        <div>Влажность: 65%</div>
+                        <div>Ветер: 3 м/с</div>
+                        <div>Давление: 760 мм</div>
+                        <div>УФ индекс: 4</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="app-container" id="gallery-app">
+            <div class="app-header">
+                <button class="app-back-button" data-back="home">← Назад</button>
+            </div>
+            <div class="app-content">
+                <h3>Фотографии</h3>
+                <div class="gallery-grid">
+                    <div class="gallery-item" style="background:linear-gradient(45deg,#ff9800,#f44336)"></div>
+                    <div class="gallery-item" style="background:linear-gradient(45deg,#4caf50,#8bc34a)"></div>
+                    <div class="gallery-item" style="background:linear-gradient(45deg,#2196f3,#3f51b5)"></div>
+                    <div class="gallery-item" style="background:linear-gradient(45deg,#9c27b0,#e91e63)"></div>
+                    <div class="gallery-item" style="background:linear-gradient(45deg,#00bcd4,#009688)"></div>
+                    <div class="gallery-item" style="background:linear-gradient(45deg,#ffeb3b,#ff9800)"></div>
+                    <div class="gallery-item" style="background:linear-gradient(45deg,#795548,#607d8b)"></div>
+                    <div class="gallery-item" style="background:linear-gradient(45deg,#3f51b5,#9c27b0)"></div>
+                    <div class="gallery-item" style="background:linear-gradient(45deg,#f44336,#ff9800)"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Обновление времени
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.getHours().toString().padStart(2, '0') + ':' + 
+                            now.getMinutes().toString().padStart(2, '0');
+            
+            const dateOptions = { weekday: 'long', day: 'numeric', month: 'long' };
+            const dateStr = now.toLocaleDateString('ru-RU', dateOptions);
+            
+            document.getElementById('timeDisplay').textContent = timeStr;
+            document.getElementById('dateDisplay').textContent = dateStr;
+            document.getElementById('osTime').textContent = timeStr;
+            
+            // Плавное обновление каждую минуту
+            const secondsLeft = 60 - now.getSeconds();
+            setTimeout(updateTime, secondsLeft * 1000);
+        }
+
+        // Разблокировка устройства
+        const unlockHandle = document.getElementById('unlockHandle');
+        const lockScreen = document.getElementById('lockScreen');
+        let isDragging = false;
+        let startPosition = 0;
+
+        unlockHandle.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startPosition = e.clientX;
+            unlockHandle.style.cursor = 'grabbing';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            
+            const barWidth = unlockHandle.parentElement.offsetWidth - unlockHandle.offsetWidth - 10;
+            let newPosition = e.clientX - startPosition;
+            
+            if (newPosition < 0) newPosition = 0;
+            if (newPosition > barWidth) newPosition = barWidth;
+            
+            unlockHandle.style.transform = `translateX(${newPosition}px)`;
+            
+            // Разблокировка при достижении конца
+            if (newPosition >= barWidth * 0.9) {
+                unlockHandle.style.backgroundColor = 'var(--success)';
+            } else {
+                unlockHandle.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (!isDragging) return;
+            
+            isDragging = false;
+            unlockHandle.style.cursor = 'grab';
+            
+            const barWidth = unlockHandle.parentElement.offsetWidth - unlockHandle.offsetWidth - 10;
+            const currentPosition = parseInt(unlockHandle.style.transform.replace('translateX(', '').replace('px)', '')) || 0;
+            
+            if (currentPosition >= barWidth * 0.9) {
+                // Успешная разблокировка
+                lockScreen.style.transform = 'translateY(-100%)';
+                setTimeout(() => {
+                    lockScreen.style.display = 'none';
+                }, 800);
+            } else {
+                // Возврат в исходное положение
+                unlockHandle.style.transition = 'transform 0.4s ease-out';
+                unlockHandle.style.transform = 'translateX(0)';
+                setTimeout(() => {
+                    unlockHandle.style.transition = '';
+                }, 400);
+            }
+        });
+
+        // Центр управления
+        let controlCenterVisible = false;
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.status-bar') && !e.target.closest('.control-center')) {
+                controlCenterVisible = !controlCenterVisible;
+                document.getElementById('controlCenter').classList.toggle('active', controlCenterVisible);
+            } else if (!e.target.closest('.control-center')) {
+                controlCenterVisible = false;
+                document.getElementById('controlCenter').classList.remove('active');
+            }
+        });
+
+        // Управление приложениями
+        const apps = {
+            'camera': document.getElementById('camera-app'),
+            'phone': document.getElementById('phone-app'),
+            'weather': document.getElementById('weather-app'),
+            'gallery': document.getElementById('gallery-app')
+        };
+        
+        let currentApp = null;
+        
+        // Открытие приложения
+        function openApp(appId) {
+            if (currentApp) return;
+            
+            const app = apps[appId];
+            if (app) {
+                currentApp = appId;
+                app.style.display = 'block';
+                
+                // Анимация открытия
+                setTimeout(() => {
+                    app.classList.add('active');
+                }, 10);
+            }
+        }
+        
+        // Закрытие приложения
+        function closeApp() {
+            if (!currentApp) return;
+            
+            const app = apps[currentApp];
+            if (app) {
+                app.classList.remove('active');
+                
+                // Даем время на анимацию перед скрытием
+                setTimeout(() => {
+                    app.style.display = 'none';
+                    currentApp = null;
+                }, 400);
+            }
+        }
+        
+        // Запуск приложений
+        document.querySelectorAll('.app-icon').forEach(icon => {
+            icon.addEventListener('click', () => {
+                const appName = icon.getAttribute('data-app');
+                if (apps[appName]) {
+                    openApp(appName);
+                } else {
+                    alert(`Приложение "${appName}" в разработке!\n\nДоступные приложения: Камера, Телефон, Погода, Галерея`);
+                }
+            });
+        });
+        
+        // Кнопки назад в приложениях
+        document.querySelectorAll('.app-back-button').forEach(button => {
+            button.addEventListener('click', closeApp);
+        });
+        
+        // Действия в приложениях
+        document.querySelectorAll('.dial-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const numberDisplay = document.querySelector('.phone-number-display');
+                const currentNumber = numberDisplay.textContent;
+                
+                if (this.textContent.includes('📞')) {
+                    alert(`Вызов номера: ${currentNumber}`);
+                } else if (this.textContent.includes('✖')) {
+                    numberDisplay.textContent = '';
+                } else {
+                    numberDisplay.textContent = currentNumber + this.textContent[0];
+                }
+            });
+        });
+        
+        // Захват фото (имитация)
+        document.querySelector('.camera-shutter').addEventListener('click', function() {
+            const cameraPreview = document.querySelector('.camera-preview');
+            cameraPreview.style.opacity = '0.5';
+            
+            setTimeout(() => {
+                cameraPreview.style.opacity = '1';
+                alert('Фото сохранено в галерею!');
+            }, 300);
+        });
+
+        // Инициализация
+        window.onload = () => {
+            updateTime();
+            // Для мобильных: заменяем mouse события на touch
+            if ('ontouchstart' in window) {
+                unlockHandle.ontouchstart = unlockHandle.onmousedown;
+                document.ontouchmove = document.onmousemove;
+                document.ontouchend = document.onmouseup;
+            }
+        };
+    </script>
+</body>
+</html>
