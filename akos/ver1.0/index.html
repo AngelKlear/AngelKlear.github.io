@@ -32,9 +32,6 @@
             height: 100vh;
             overflow: hidden;
             position: relative;
-            background-size: cover;
-            background-position: center;
-            transition: background-image 0.5s ease;
         }
 
         /* Основа ОС */
@@ -102,8 +99,12 @@
         }
 
         .app-icon.phone::before { content: "📞"; background: var(--success); }
+        .app-icon.messages::before { content: "✉️"; background: var(--accent); }
         .app-icon.camera::before { content: "📷"; background: var(--warning); }
         .app-icon.gallery::before { content: "🖼️"; background: #e91e63; }
+        .app-icon.music::before { content: "🎵"; background: #9c27b0; }
+        .app-icon.maps::before { content: "🗺️"; background: #3f51b5; }
+        .app-icon.weather::before { content: "☀️"; background: #ff9800; }
         .app-icon.settings::before { content: "⚙️"; background: #607d8b; }
 
         .app-name {
@@ -224,38 +225,42 @@
             opacity: 0.8;
         }
 
-        /* Отпечаток пальца */
-        .fingerprint {
-            width: 80px;
-            height: 80px;
+        .unlock-bar {
+            width: 80%;
+            max-width: 400px;
+            height: 60px;
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
+            border-radius: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 20px;
-            cursor: pointer;
+            position: relative;
+            overflow: hidden;
             border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .unlock-bar::after {
+            content: "Проведите для разблокировки";
+            position: absolute;
             transition: var(--transition);
         }
 
-        .fingerprint:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.05);
+        .unlock-bar:hover::after {
+            opacity: 0.5;
         }
 
-        .fingerprint::before {
-            content: "🔒";
-            font-size: 36px;
-        }
-
-        .fingerprint.unlocking {
-            background: var(--success);
-            transform: scale(1.1);
-        }
-
-        .fingerprint.unlocking::before {
-            content: "🔓";
+        .unlock-handle {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            position: absolute;
+            left: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            transition: var(--transition);
         }
 
         /* Анимация неона */
@@ -309,62 +314,22 @@
             z-index: 10;
         }
 
+        .app-back-button {
+            background: none;
+            border: none;
+            color: var(--accent);
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
         .app-content {
-            height: calc(100% - 110px);
+            height: calc(100% - 50px);
             overflow-y: auto;
             padding: 16px;
             background: var(--surface);
-        }
-
-        /* Панель управления приложениями */
-        .app-controls {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 60px;
-            background: rgba(30, 30, 30, 0.9);
-            backdrop-filter: blur(20px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 40px;
-            padding: 0 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 10;
-        }
-
-        .control-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: var(--transition);
-            border: none;
-            color: var(--text);
-            font-size: 18px;
-        }
-
-        .control-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.1);
-        }
-
-        .control-btn.triangle::before {
-            content: "◀";
-            transform: rotate(-90deg);
-            display: block;
-        }
-
-        .control-btn.square::before {
-            content: "■";
-        }
-
-        .control-btn.circle::before {
-            content: "●";
         }
 
         /* Стили для конкретных приложений */
@@ -462,6 +427,18 @@
             margin-bottom: 20px;
         }
 
+        /* Анимация открытия приложения */
+        @keyframes appOpen {
+            0% { 
+                opacity: 0; 
+                transform: translateY(100px) scale(0.9);
+            }
+            100% { 
+                opacity: 1; 
+                transform: translateY(0) scale(1);
+            }
+        }
+
         /* Галерея */
         .gallery-grid {
             display: grid;
@@ -476,53 +453,45 @@
             overflow: hidden;
         }
 
-        /* Настройки */
-        .settings-grid {
-            display: grid;
-            gap: 15px;
-        }
-
-        .settings-item {
+        /* Погода */
+        .weather-card {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 16px;
-            padding: 16px;
-            cursor: pointer;
-            transition: var(--transition);
+            padding: 20px;
+            margin-bottom: 20px;
         }
 
-        .settings-item:hover {
-            background: rgba(255, 255, 255, 0.1);
+        .current-weather {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
         }
 
-        .wallpaper-preview {
-            width: 100%;
-            height: 150px;
-            background-size: cover;
-            background-position: center;
-            border-radius: 12px;
-            margin-top: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .weather-icon {
+            font-size: 64px;
         }
 
-        .wallpaper-options {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
+        .weather-temp {
+            font-size: 48px;
+            font-weight: 300;
+        }
+
+        .forecast {
+            display: flex;
             gap: 10px;
-            margin-top: 15px;
+            overflow-x: auto;
+            padding: 10px 0;
         }
 
-        .wallpaper-option {
-            aspect-ratio: 1;
-            border-radius: 8px;
-            background-size: cover;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: var(--transition);
-        }
-
-        .wallpaper-option:hover, .wallpaper-option.active {
-            border-color: var(--accent);
-            transform: scale(1.05);
+        .forecast-item {
+            min-width: 80px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
     </style>
 </head>
@@ -536,7 +505,9 @@
                 <div class="time-display" id="timeDisplay">10:24</div>
                 <div class="date-display" id="dateDisplay">Среда, 17 августа</div>
             </div>
-            <div class="fingerprint" id="fingerprint"></div>
+            <div class="unlock-bar">
+                <div class="unlock-handle" id="unlockHandle"></div>
+            </div>
         </div>
 
         <!-- Статус бар -->
@@ -551,11 +522,23 @@
             <div class="app-icon phone" data-app="phone">
                 <span class="app-name">Телефон</span>
             </div>
+            <div class="app-icon messages" data-app="messages">
+                <span class="app-name">Сообщения</span>
+            </div>
             <div class="app-icon camera" data-app="camera">
                 <span class="app-name">Камера</span>
             </div>
             <div class="app-icon gallery" data-app="gallery">
                 <span class="app-name">Галерея</span>
+            </div>
+            <div class="app-icon music" data-app="music">
+                <span class="app-name">Музыка</span>
+            </div>
+            <div class="app-icon maps" data-app="maps">
+                <span class="app-name">Карты</span>
+            </div>
+            <div class="app-icon weather" data-app="weather">
+                <span class="app-name">Погода</span>
             </div>
             <div class="app-icon settings" data-app="settings">
                 <span class="app-name">Настройки</span>
@@ -565,8 +548,8 @@
         <!-- Док-панель -->
         <div class="dock">
             <div class="app-icon phone" data-app="phone"></div>
+            <div class="app-icon messages" data-app="messages"></div>
             <div class="app-icon camera" data-app="camera"></div>
-            <div class="app-icon gallery" data-app="gallery"></div>
             <div class="app-icon settings" data-app="settings"></div>
         </div>
 
@@ -585,7 +568,7 @@
         <!-- Контейнеры приложений -->
         <div class="app-container" id="camera-app">
             <div class="app-header">
-                <div style="font-weight: 500;">Камера</div>
+                <button class="app-back-button" data-back="home">← Назад</button>
             </div>
             <div class="app-content">
                 <div class="camera-preview">
@@ -602,16 +585,11 @@
                     <div class="gallery-item"></div>
                 </div>
             </div>
-            <div class="app-controls">
-                <button class="control-btn triangle" data-action="back"></button>
-                <button class="control-btn square" data-action="home"></button>
-                <button class="control-btn circle" data-action="close"></button>
-            </div>
         </div>
         
         <div class="app-container" id="phone-app">
             <div class="app-header">
-                <div style="font-weight: 500;">Телефон</div>
+                <button class="app-back-button" data-back="home">← Назад</button>
             </div>
             <div class="app-content">
                 <div class="phone-number-display">+7 (999) 123-45-67</div>
@@ -634,16 +612,66 @@
                     <div class="dial-button" style="background: var(--error);">✖</div>
                 </div>
             </div>
-            <div class="app-controls">
-                <button class="control-btn triangle" data-action="back"></button>
-                <button class="control-btn square" data-action="home"></button>
-                <button class="control-btn circle" data-action="close"></button>
+        </div>
+        
+        <div class="app-container" id="weather-app">
+            <div class="app-header">
+                <button class="app-back-button" data-back="home">← Назад</button>
+            </div>
+            <div class="app-content">
+                <div class="weather-card">
+                    <div class="current-weather">
+                        <div class="weather-icon">☀️</div>
+                        <div class="weather-temp">24°</div>
+                    </div>
+                    <div>Москва, Россия</div>
+                    <div>Солнечно, без осадков</div>
+                </div>
+                
+                <h3>Прогноз на 5 дней</h3>
+                <div class="forecast">
+                    <div class="forecast-item">
+                        <div>СР</div>
+                        <div>☀️</div>
+                        <div>24°</div>
+                    </div>
+                    <div class="forecast-item">
+                        <div>ЧТ</div>
+                        <div>⛅</div>
+                        <div>22°</div>
+                    </div>
+                    <div class="forecast-item">
+                        <div>ПТ</div>
+                        <div>🌧️</div>
+                        <div>18°</div>
+                    </div>
+                    <div class="forecast-item">
+                        <div>СБ</div>
+                        <div>🌧️</div>
+                        <div>17°</div>
+                    </div>
+                    <div class="forecast-item">
+                        <div>ВС</div>
+                        <div>⛅</div>
+                        <div>20°</div>
+                    </div>
+                </div>
+                
+                <div class="weather-card">
+                    <h3>Детали</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                        <div>Влажность: 65%</div>
+                        <div>Ветер: 3 м/с</div>
+                        <div>Давление: 760 мм</div>
+                        <div>УФ индекс: 4</div>
+                    </div>
+                </div>
             </div>
         </div>
         
         <div class="app-container" id="gallery-app">
             <div class="app-header">
-                <div style="font-weight: 500;">Галерея</div>
+                <button class="app-back-button" data-back="home">← Назад</button>
             </div>
             <div class="app-content">
                 <h3>Фотографии</h3>
@@ -658,41 +686,6 @@
                     <div class="gallery-item" style="background:linear-gradient(45deg,#3f51b5,#9c27b0)"></div>
                     <div class="gallery-item" style="background:linear-gradient(45deg,#f44336,#ff9800)"></div>
                 </div>
-            </div>
-            <div class="app-controls">
-                <button class="control-btn triangle" data-action="back"></button>
-                <button class="control-btn square" data-action="home"></button>
-                <button class="control-btn circle" data-action="close"></button>
-            </div>
-        </div>
-        
-        <div class="app-container" id="settings-app">
-            <div class="app-header">
-                <div style="font-weight: 500;">Настройки</div>
-            </div>
-            <div class="app-content">
-                <div class="settings-grid">
-                    <div class="settings-item">
-                        <h3>Обои</h3>
-                        <p>Выберите фоновое изображение</p>
-                        <div class="wallpaper-preview" id="current-wallpaper"></div>
-                        
-                        <h4 style="margin-top: 20px;">Выбрать обои:</h4>
-                        <div class="wallpaper-options">
-                            <div class="wallpaper-option active" style="background:linear-gradient(135deg, #1a237e, #311b92)" data-wallpaper="default"></div>
-                            <div class="wallpaper-option" style="background:linear-gradient(45deg, #1a2a6c, #b21f1f, #1a2a6c)" data-wallpaper="gradient1"></div>
-                            <div class="wallpaper-option" style="background:linear-gradient(45deg, #3a1c71, #d76d77, #ffaf7b)" data-wallpaper="gradient2"></div>
-                        </div>
-                        
-                        <h4 style="margin-top: 20px;">Загрузить свои:</h4>
-                        <input type="file" id="wallpaper-upload" accept="image/*" style="margin-top: 10px;">
-                    </div>
-                </div>
-            </div>
-            <div class="app-controls">
-                <button class="control-btn triangle" data-action="back"></button>
-                <button class="control-btn square" data-action="home"></button>
-                <button class="control-btn circle" data-action="close"></button>
             </div>
         </div>
     </div>
@@ -716,23 +709,61 @@
             setTimeout(updateTime, secondsLeft * 1000);
         }
 
-        // Разблокировка устройства через отпечаток
-        const fingerprint = document.getElementById('fingerprint');
+        // Разблокировка устройства
+        const unlockHandle = document.getElementById('unlockHandle');
         const lockScreen = document.getElementById('lockScreen');
+        let isDragging = false;
+        let startPosition = 0;
 
-        function unlockDevice() {
-            fingerprint.classList.add('unlocking');
+        unlockHandle.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startPosition = e.clientX;
+            unlockHandle.style.cursor = 'grabbing';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
             
-            setTimeout(() => {
+            const barWidth = unlockHandle.parentElement.offsetWidth - unlockHandle.offsetWidth - 10;
+            let newPosition = e.clientX - startPosition;
+            
+            if (newPosition < 0) newPosition = 0;
+            if (newPosition > barWidth) newPosition = barWidth;
+            
+            unlockHandle.style.transform = `translateX(${newPosition}px)`;
+            
+            // Разблокировка при достижении конца
+            if (newPosition >= barWidth * 0.9) {
+                unlockHandle.style.backgroundColor = 'var(--success)';
+            } else {
+                unlockHandle.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (!isDragging) return;
+            
+            isDragging = false;
+            unlockHandle.style.cursor = 'grab';
+            
+            const barWidth = unlockHandle.parentElement.offsetWidth - unlockHandle.offsetWidth - 10;
+            const currentPosition = parseInt(unlockHandle.style.transform.replace('translateX(', '').replace('px)', '')) || 0;
+            
+            if (currentPosition >= barWidth * 0.9) {
+                // Успешная разблокировка
                 lockScreen.style.transform = 'translateY(-100%)';
                 setTimeout(() => {
                     lockScreen.style.display = 'none';
                 }, 800);
-            }, 500);
-        }
-
-        fingerprint.addEventListener('click', unlockDevice);
-        fingerprint.addEventListener('touchstart', unlockDevice);
+            } else {
+                // Возврат в исходное положение
+                unlockHandle.style.transition = 'transform 0.4s ease-out';
+                unlockHandle.style.transform = 'translateX(0)';
+                setTimeout(() => {
+                    unlockHandle.style.transition = '';
+                }, 400);
+            }
+        });
 
         // Центр управления
         let controlCenterVisible = false;
@@ -750,8 +781,8 @@
         const apps = {
             'camera': document.getElementById('camera-app'),
             'phone': document.getElementById('phone-app'),
-            'gallery': document.getElementById('gallery-app'),
-            'settings': document.getElementById('settings-app')
+            'weather': document.getElementById('weather-app'),
+            'gallery': document.getElementById('gallery-app')
         };
         
         let currentApp = null;
@@ -794,15 +825,15 @@
                 const appName = icon.getAttribute('data-app');
                 if (apps[appName]) {
                     openApp(appName);
+                } else {
+                    alert(`Приложение "${appName}" в разработке!\n\nДоступные приложения: Камера, Телефон, Погода, Галерея`);
                 }
             });
         });
         
-        // Управление кнопками навигации
-        document.querySelectorAll('.control-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                closeApp();
-            });
+        // Кнопки назад в приложениях
+        document.querySelectorAll('.app-back-button').forEach(button => {
+            button.addEventListener('click', closeApp);
         });
         
         // Действия в приложениях
@@ -832,63 +863,15 @@
             }, 300);
         });
 
-        // Управление обоями
-        const wallpaperOptions = document.querySelectorAll('.wallpaper-option');
-        const wallpaperUpload = document.getElementById('wallpaper-upload');
-        const currentWallpaper = document.getElementById('current-wallpaper');
-        
-        // Предустановленные обои
-        const wallpapers = {
-            'default': 'linear-gradient(135deg, #1a237e, #311b92)',
-            'gradient1': 'linear-gradient(45deg, #1a2a6c, #b21f1f, #1a2a6c)',
-            'gradient2': 'linear-gradient(45deg, #3a1c71, #d76d77, #ffaf7b)'
-        };
-        
-        // Установка обоев
-        function setWallpaper(style) {
-            document.body.style.backgroundImage = style;
-            currentWallpaper.style.backgroundImage = style;
-        }
-        
-        // Обработка выбора обоев
-        wallpaperOptions.forEach(option => {
-            option.addEventListener('click', function() {
-                wallpaperOptions.forEach(opt => opt.classList.remove('active'));
-                this.classList.add('active');
-                
-                const wallpaperId = this.getAttribute('data-wallpaper');
-                if (wallpaperId in wallpapers) {
-                    setWallpaper(wallpapers[wallpaperId]);
-                }
-            });
-        });
-        
-        // Загрузка пользовательских обоев
-        wallpaperUpload.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file && file.type.match('image.*')) {
-                const reader = new FileReader();
-                
-                reader.onload = function(e) {
-                    const url = e.target.result;
-                    setWallpaper(`url(${url})`);
-                    
-                    // Обновляем превью
-                    currentWallpaper.style.backgroundImage = `url(${url})`;
-                    
-                    // Выделяем пользовательский вариант
-                    wallpaperOptions.forEach(opt => opt.classList.remove('active'));
-                };
-                
-                reader.readAsDataURL(file);
-            }
-        });
-        
         // Инициализация
         window.onload = () => {
             updateTime();
-            // Установка обоев по умолчанию
-            setWallpaper(wallpapers.default);
+            // Для мобильных: заменяем mouse события на touch
+            if ('ontouchstart' in window) {
+                unlockHandle.ontouchstart = unlockHandle.onmousedown;
+                document.ontouchmove = document.onmousemove;
+                document.ontouchend = document.onmouseup;
+            }
         };
     </script>
 </body>
